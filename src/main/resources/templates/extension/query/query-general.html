@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<!--/* Head takes 3 arguments that are fragments */-->
+<head>
+
+<!--/*  Title will be replaced by their respective titles in the calling template. */-->
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+<!--/* Default links; can be replaced by the calling templates */-->
+<link rel="stylesheet" type="text/css"
+	href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+	th:href="@{/webjars/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css}" />
+
+
+<!--/* Default scripts; can be replaced by the calling templates */-->
+<script type="text/javascript"
+	src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js"
+	th:src="@{/webjars/tether/1.4.0/dist/js/tether.min.js}"></script>
+<!-- /.container -->
+<script type="text/javascript" src="/webjars/jquery/3.2.0/jquery.min.js"
+	th:src="@{/webjars/jquery/3.2.0/jquery.min.js}"></script>
+<script type="text/javascript"
+	src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js"
+	th:src="@{/webjars/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js}"></script>
+ 
+</head>
+<body>
+	<!--/* Header fragment */-->
+	<div class="content-main" th:fragment="query">
+	<link rel="stylesheet" href="../static/css/query-general.css"
+	th:href="@{/css/query-general.css}" />
+		<style>
+.distinct-geodir-general-query {
+	max-height: 200px;
+	overflow-y: auto;
+}
+</style>
+		<div class="row">
+			<div class="col-12">
+				<div id="gquery_general_el">
+					<div class="form-group row">
+						<div class="col-md-4">
+							<input v-model="query.filter" class="form-control input-sm form-control-sm" 
+								autofocus style="margin: 10px;"/>
+						</div>
+						<div class="col-md-3">
+<!-- 							<img src="../static/images/view/filtros/menu.svg" -->
+<!-- 								th:src="@{/images/view/filtros/menu.svg}"  class="imgMenu"/> -->
+						</div>
+					</div>
+					<div class="form-group row">
+						<div class="col-md-12 distinct-geodir-general-query">
+							<ul class="list-group">
+								<li v-for="_distinctValue in filteredItems"
+									class="list-group-item list-padding"><input type="checkbox"
+									:id="_distinctValue"
+									:value="_distinctValue" v-model="query.values" /> <label
+									:for="_distinctValue" class="checkLi">{{_distinctValue.alias}}</label></li>
+							</ul>
+						</div>
+					</div>
+					<div class="form-group row text-center" style="margin-top: 30px;">
+						<div class="col-sm-6 col-md-6 col-lg-4">
+							<button type="button" class="btn btn-secondary btnTodo"
+								v-on:click="selectAllValues">Todos</button>
+						</div>
+						<div class="col-sm-6 col-md-6 col-lg-4">
+							<button type="button" class="btn btn-secondary btnTodo"
+								v-on:click="selectNoneValues">Ninguno</button>
+						</div>
+
+
+						<div class="col-sm-6 col-md-6 col-lg-4">
+							<label class="custom-control custom-checkbox Excluir"> <input
+								type="checkbox"
+								class="custom-control-input" :value="query.exclude"
+								v-model="query.exclude" /><span
+								class="custom-control-indicator"></span> <span
+								class="custom-control-description">Excluir</span>
+							</label>
+						</div>
+					</div>
+					<!-- <h6>Resumen</h6>
+					<div class="form-group row">
+						<div class="col-sm-3 col-md-3">
+							<label>Columna:</label>
+						</div>
+						<div class="col-sm-9 col-md-9">
+							<label> Distrito </label>
+						</div>
+					</div>
+					<div class="form-group row">
+						<div class="col-sm-3 col-md-3">
+							<label>Selecci&oacute;n:</label>
+						</div>
+						<div class="col-sm-9 col-md-9">
+							<label> 59 de 59 valores seleccionados </label>
+						</div>
+					</div>
+					<div class="form-group row">
+						<div class="col-sm-3 col-md-3">
+							<label>Comod&iacute;n:</label>
+						</div>
+						<div class="col-sm-9 col-md-9">
+							<label class="resumen"> Todo </label>
+						</div>
+					</div>
+					<div class="form-group row">
+						<div class="col-sm-3 col-md-3">
+							<label>Condici&oacute;n:</label>
+						</div>
+						<div class="col-sm-9 col-md-9">
+							<label class="resumen"> Ninguno </label>
+						</div>
+					</div>
+					<div class="form-group row">
+						<div class="col-sm-3 col-md-3">
+							<label>L&iacute;mite:</label>
+						</div>
+						<div class="col-sm-9 col-md-9">
+							<label class="resumen"> Ninguno </label>
+						</div>
+					</div> -->
+					<div class="modal-footer">
+					
+						<a v-on:click="generateSQL" class="btn btn-primary btnCyan">Aceptar</a>
+					</div>
+				</div>
+
+				<script th:inline="javascript">
+/*<![CDATA[*/
+           	var gquery_general = /*[[${gquery_general}]]*/;
+			var general_principal_values = gquery_general.principalValues;
+           			delete gquery_general.principalValues;
+					var vue_gquery_general = new Vue({
+					  el: '#gquery_general_el',
+					  data: function(){
+					  	return {
+						  query:gquery_general,
+						  principalValues:general_principal_values
+						};
+					  },
+					  computed: {
+						filteredItems:function() {
+							let  filtro = this.query.filter;
+							 return this.principalValues.listDistinct.filter( function(item){
+								  return String(item.value).toLowerCase().indexOf(filtro.toLowerCase()) > -1
+							 })
+						}
+					  },
+					  created: function(){
+						let serverContext = [[@{/}]];
+						let layerAdminInstance = GeodirLayerAdmin.getInstance(serverContext);
+						let data =this;
+						layerAdminInstance.on('changeLayerEvent', 
+						function () {
+							$.getJSON(serverContext+'extension/query/general/data',function(queryModel){
+								  data.query = queryModel;
+								  data.principalValues = queryModel.principalValues;
+								  delete data.query.principalValues;
+							}.bind(data));
+						},{type:'general'});
+						// solo general
+						layerAdminInstance.onAddLayer( 
+							function () {
+									var layerAdd = this;
+									$.getJSON(serverContext+'extension/query/defaultdilter',function(result){
+										layerAdd.setfiltro(result.message);
+										layerAdd.updateMapaStyle();
+							}.bind(data));
+						});
+					  },
+					  methods: {
+						  selectAllValues: function(){
+							  var _data = this;
+							  _data.query.values=_data.principalValues.listDistinct;
+							  _data.generateSQL();
+						   },
+						   selectNoneValues: function(){
+							   var _data = this;
+							   _data.query.values=[];
+							   _data.generateSQL();
+						   },
+						   changeColumn: function(_column){
+							   var _data = this;
+							   if(_column == undefined)
+								  return;
+				               	$.ajax({
+				                    type: "POST",
+				                    url: serverContext+'extension/query/column/values',
+				                    contentType: "application/json; charset=utf-8",
+				                    data:JSON.stringify(this.query.column),
+				                    success: function(properties){
+				                    	_data.principalValues=properties;
+				                    	_data.query.values=[];
+				                    	_data.query.filter='';
+				                    },
+				                    error: function(XMLHttpRequest, textStatus, errorThrown){
+				                    	alert('Error');
+				                    }
+				                });
+						   },
+						  generateSQL: function(){
+							  $.ajax({
+				                    type: "PUT",
+				                    url: serverContext+'extension/query/general/save',
+				                    contentType: "application/json; charset=utf-8",
+				                    data:JSON.stringify(this.query),
+				                    success: function(result){
+				                    		let serverContext = [[@{/}]];
+				                		    let layerAdminInstance = GeodirLayerAdmin.getInstance(serverContext);
+				                		    layerAdminInstance.filterLayer(result.message)
+				                		    $('#gridSystemModal').modal('hide');
+				                    },
+				                    error: function(XMLHttpRequest, textStatus, errorThrown){
+				                    	alert('Error');
+				                    }
+				               });
+						   }
+
+
+							   
+					  }
+					})
+/*]]>*/
+</script>
+
+			</div>
+		</div>
+	</div>
+</body>
+</html>

@@ -1,0 +1,23 @@
+.nav-tabs {
+    border-bottom: none !important;
+    margin-bottom: 10px;
+}
+
+/* 
+a.nav-link {
+    color: #aaa !important;
+    text-transform: uppercase !important;
+    border: none !important;
+    border-bottom: 2px solid #aaa !important;
+}
+
+a.nav-link.active {
+    color: #00a1df !important;
+    background-color: #fff;
+    text-transform: uppercase !important;
+    border-bottom: 2px solid #6fcaed !important;
+} */
+
+.list-padding{
+	padding: .25rem 2rem !important;
+}

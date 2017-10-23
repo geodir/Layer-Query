@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<!--/* Head takes 3 arguments that are fragments */-->
+<head th:fragment="head(title, links, scripts)">
+
+<!--/*  Title will be replaced by their respective titles in the calling template. */-->
+<title th:replace="${title}">Task List</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+<!--/* Default links; can be replaced by the calling templates */-->
+<link rel="stylesheet" type="text/css"
+	href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+	th:href="@{/webjars/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css}" />
+
+<!--/* Per-page placeholder for additional links */-->
+<th:block th:replace="${links}" />
+
+<!--/* Default scripts; can be replaced by the calling templates */-->
+<script type="text/javascript"
+	src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js"
+	th:src="@{/webjars/tether/1.4.0/dist/js/tether.min.js}"></script>
+<!-- /.container -->
+<script type="text/javascript" src="/webjars/jquery/3.2.0/jquery.min.js"
+	th:src="@{/webjars/jquery/3.2.0/jquery.min.js}"></script>
+<script type="text/javascript"
+	src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js"
+	th:src="@{/webjars/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js}"></script>
+
+<!--/* Per-page placeholder for additional scripts */-->
+<th:block th:replace="${scripts}" />
+
+</head>
+<body>
+	<!--/* principal fragment */-->
+	<div class="panel-geodir" th:fragment="query">
+		<script type="text/javascript"
+			src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.3.0/vue.js"></script>
+		<div id="geodir_query_container"></div>
+	</div>
+
+	<div class="panel-geodir" th:fragment="configuration">
+		<div id="geodir_query_configurtion_container"></div>
+		<script th:inline="javascript">
+/*<![CDATA[*/
+ var serverContext = [[@{/}]];
+GEODIR._on('loaded',function(){
+	$("#geodir_query_configurtion_container").load(serverContext+'extension/query/configuration');
+});
+/*]]>*/
+</script>
+	</div>
+
+	<div class="panel-geodir" th:fragment="geodir_query_configuration">
+		<div id="vue_gquery_conf_el">
+			<div class="form-group row">
+				<div class="col-sm-12">
+					<div class="btn-group" role="group">
+						<button id="btnGroupDrop1" type="button"
+							class="btn btn-secondary styleAction" data-toggle="dropdown"
+							aria-haspopup="true" aria-expanded="false">
+							Agregar <span class="fa fa-plus" aria-hidden="true"></span>
+						</button>
+						<div class="dropdown-menu addFilter"
+							aria-labelledby="btnGroupDrop1">
+							<a class="dropdown-item" v-for="_column in query"
+								v-on:click="selectColumn(_column)"
+								v-bind:class="classDisableColumn(_column)"><span
+								class="fa fa-plus"></span> {{_column.alias}}</a>
+						</div>
+					</div>
+				</div>
+				<div class="col-sm-12">
+					<ul class="list-group">
+						<li class="list-group-item justify-content-between"
+							v-for="(_cond, index) in conditions">{{_cond.alias}}
+							{{_cond.operator}} {{columnvalueAlias(_cond.value)}} <span class="fa fa-trash-o"
+							v-on:click="deleteCondition(index)"></span>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+		<script th:inline="javascript">
+/*<![CDATA[*/
+					var vue_gquery_conf = new Vue({
+					  el: '#vue_gquery_conf_el',
+					  data: function(){
+					  	return {
+						  query:[],
+						  conditions:[],
+						};
+					  },
+					  computed: {
+						classDisableColumn: function (column) {
+							let isdisable = false;
+							for (let i = 0; i < this.conditions.length; i++) {
+							   	if(this.conditions[i].column===column.name){
+							   		isdisable= true;
+							   		break;
+								}
+							}
+		  					return {'disabled': isdisable}
+			  			}
+					  },
+					  created: function(){
+						    let _data =this;
+						   	//GEODIR._on('loaded',function(){
+	 						  	let serverContext = [[@{/}]];
+	 							let layerAdminInstance = GeodirLayerAdmin.getInstance(serverContext);
+	 							let data = _data;
+	 							console.log('adding fire');
+	 							layerAdminInstance.on(GEODIR.Event.CHANGELAYEREVENT,
+	 									function () {
+	 								console.log('calling fire ');
+	 										$.getJSON(serverContext+'extension/query/columns/all',function(columnas){
+	 										 	 data.query = columnas;
+	 										}.bind(data));
+	 										$.getJSON(serverContext+'extension/query/conf',function(configuration){
+	 											 data.conditions = configuration.conditions;
+	 										}.bind(data));
+	 							});
+	 							layerAdminInstance.on(GEODIR.Event.FILTERLAYEREVENT,
+	 									function () {
+	 										$.getJSON(serverContext+'extension/query/conf',function(configuration){
+	 											 data.conditions = configuration.conditions;
+	 										}.bind(data));
+	 							});
+							//});
+
+					  },
+					  methods: {
+						  columnvalueAlias: function(value){
+							  let value_alias = [];
+							  for (let i = 0; i < value.length; i++) {
+								  value_alias.push(value[i].alias);
+							  }
+							  return value_alias;
+						  },
+						  classDisableColumn: function (column) {
+								let isdisable = false;
+								for (let i = 0; i < this.conditions.length; i++) {
+								   	if(this.conditions[i].column===column.name){
+								   		isdisable= true;
+								   		break;
+									}
+								}
+			  					return {'disabled': isdisable}
+				  		  },
+						  selectColumn: function(column){
+							  for (let i = 0; i < this.conditions.length; i++) {
+								  if(this.conditions[i].column===column.name){
+									  return;
+								}
+							  }
+							  let serverContext = [[@{/}]];
+							  $("#geodir_query_container").load(serverContext+'extension/query/all/'+column.name);
+							  $('#gridSystemModal').modal('show');
+						   },
+						   deleteCondition:function(index){
+							   console.log(index);
+							   let serverContext = [[@{/}]];
+							   var _data = this;
+							   var $token = $("meta[name='_csrf']");
+							   var $header = $("meta[name='_csrf_header']");
+							   $.ajax({url : serverContext+'extension/query/'+_data.conditions[index].id,
+									   type : 'DELETE',
+									   beforeSend : function(request) {
+											if ($token != null && $token.length > 0
+														&& $header != null && $header.length > 0) {
+													request.setRequestHeader($header.attr("content"),
+															$token.attr("content"));
+												}
+											}
+								}).done(function(result) {
+									let layerAdminInstance = GeodirLayerAdmin.getInstance(serverContext);
+									let currentLayer = layerAdminInstance.getCurrentLayer();
+		                		    if(currentLayer!=null){
+		                		    	currentLayer.layer.setfiltro(result.message);
+		                		    	currentLayer.layer.updateMapaStyle();
+		                			}
+									_data.conditions.splice(index, 1);
+								}).fail(function(jqXHR, status) {
+									console.log(jqXHR);
+									console.log(status);
+								});
+						   }
+					  }
+					})
+	var query_configuration = /*[[${query_configuration}]]*/;
+/*]]>*/
+</script>
+	</div>
+
+	<div class="container-fluid" th:fragment="geodir_query">
+		<!-- Nav tabs -->
+		<form action="#" th:action="@{/extension/query/saveconf}"
+			th:object="${queryconf}" method="post">
+			<ul class="nav nav-tabs" role="tablist">
+				<li class="nav-item" th:each="g_query : ${geodir_querys}"><a
+					class="nav-link"
+					th:classappend="(${g_query} eq *{queryName})? 'active'"
+					data-toggle="tab" href="#home"
+					th:href="${'#geodir-query-'+ g_query.name}" role="tab"
+					th:text="${g_query.title}">Home</a></li>
+			</ul>
+		</form>
+
+		<!-- Tab panes -->
+		<div class="tab-content">
+			<div class="tab-pane" th:id="${'geodir-query-'+ g_query.name}"
+				th:classappend="(${g_query.name} eq ${queryconf.queryName})? 'active'"
+				role="tabpanel" th:each="g_query : ${geodir_querys}">
+				<div class="container"
+					th:replace="${'extension/query/query-'+ g_query.name} :: query"></div>
+			</div>
+		</div>
+		<script th:inline="javascript">
+/*<![CDATA[*/
+$(document).ready(function () {
+	$('.geodir-query-form').submit(function(event) {
+		var $this = $(this);
+		let contextService = $this.prop("action");
+		event.preventDefault();
+	    let formData= $this.serialize();
+	    $.post(contextService,formData ,function(data){
+	        let serverContext = [[@{/}]];
+		    let layerAdminInstance = GeodirLayerAdmin.getInstance(serverContext);
+		    let currentLayer = layerAdminInstance.getCurrentLayer();
+		    if(currentLayer!=null){
+		    	currentLayer.layer.setfiltro(data.message);
+		    	currentLayer.layer.updateMapaStyle();
+			 }
+			else
+				alert('seleccione una capa');
+		   
+	    })
+	    .fail(function(data) {
+	    	console.log(data);
+	    });
+	});
+});
+/*]]>*/
+</script>
+	</div>
+</body>
+</html>
